@@ -221,13 +221,6 @@ Image_Captioning/
 - [ ] **Cross-Domain Transfer**: Adapt model for different types of remote sensing imagery
 - [ ] **Real-time Inference**: Optimize model for deployment and real-time applications
 
-## 👨‍💻 Author
-
-**Vaibhav Bhatnagar**
-- Roll Number: 23M1062
-- Project: Image Captioning Assignment 1
-- Institution: Advanced Machine Learning Course
-
 ## 📚 References
 
 1. RSICD Dataset - Remote Sensing Image Captioning Dataset
