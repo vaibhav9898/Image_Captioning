@@ -1,10 +1,10 @@
 # Image Captioning for Remote Sensing Images
 
-A comprehensive implementation of CNN-LSTM based image captioning system specifically designed for remote sensing imagery using the RSICD dataset. This project demonstrates end-to-end pipeline for generating natural language descriptions of satellite and aerial images.
+A comprehensive implementation of image captioning systems specifically designed for remote sensing imagery using the RSICD dataset. This project demonstrates end-to-end pipelines for generating natural language descriptions of satellite and aerial images using both traditional CNN-LSTM and modern CNN-Transformer architectures.
 
 ## 🚀 Project Overview
 
-This project implements an image captioning system that automatically generates descriptive captions for remote sensing images. It uses a CNN-LSTM architecture where a CNN encoder extracts visual features from images and an LSTM decoder generates coherent captions describing the scene content including land use, structures, and spatial layouts.
+This project implements multiple image captioning architectures that automatically generate descriptive captions for remote sensing images. The implementation includes both traditional CNN-LSTM and modern CNN-Transformer architectures where CNN encoders extract visual features from images and different decoder architectures generate coherent captions describing the scene content including land use, structures, and spatial layouts.
 
 ## 📊 Dataset
 
@@ -18,32 +18,53 @@ This project implements an image captioning system that automatically generates 
 - **Image Format**: RGB, resized to 224×224 pixels
 - **Caption Stats**: Average 10.7 words per caption, vocabulary of 3,545 unique words
 
-## 🏗️ Model Architecture
+## 🏗️ Model Architectures
+
+This project implements and compares two different decoder architectures:
 
 ### CNN Encoder
 - **Backbone**: ResNet-18 pre-trained on ImageNet
 - **Feature Extraction**: 512-dimensional feature vectors
 - **Fine-tuning**: Optional (configurable)
 
-### LSTM Decoder
-- **Architecture**: Multi-layer LSTM with attention mechanism
+### Decoder Options
+
+#### 1. LSTM Decoder
+- **Architecture**: Multi-layer LSTM 
 - **Embedding**: Word embeddings for vocabulary
-- **Output**: Sequential word generation with beam search
+- **Feature Injection**: Multiple modes (init_hidden, img_token)
+- **Output**: Sequential word generation with greedy/beam search
 - **Special Tokens**: `<START>`, `<END>`, `<PAD>`, `<UNK>`
 
+#### 2. Transformer Decoder
+- **Architecture**: Multi-layer Transformer decoder with self-attention
+- **Attention Mechanism**: Multi-head self-attention (8 heads)
+- **Layers**: 2 transformer decoder layers
+- **Embedding Dimension**: 384
+- **Positional Encoding**: Learned positional embeddings
+- **Memory Integration**: Image features projected to memory tokens
+- **Output**: Sequential word generation with causal masking
+
 ### Key Features
-- **Attention Mechanism**: Visual attention over spatial features
+- **Multiple Architectures**: Both LSTM and Transformer decoders
+- **Attention Mechanism**: Visual attention over spatial features (Transformer)
 - **Feature Injection**: Multiple modes (concat, add, etc.)
 - **Beam Search**: For improved caption generation
 - **Teacher Forcing**: During training for faster convergence
 
 ## 📈 Performance Results
 
-### Evaluation Metrics (BLEU Scores)
+### CNN + LSTM Decoder (Cached Features)
 - **BLEU-1**: 0.5847
 - **BLEU-2**: 0.4103  
 - **BLEU-3**: 0.2968
 - **BLEU-4**: 0.2238
+
+### CNN + Transformer Decoder (End-to-End)
+- **BLEU-4**: 0.2074
+- **METEOR**: 0.3577
+- **Caption Length**: 10.50 ± 2.88 words
+- **Degenerate Repetitions**: 0.27%
 
 ### Model Specifications
 - **Parameters**: ~2.1M trainable parameters
@@ -93,28 +114,49 @@ python -c "import nltk; nltk.download('punkt')"
 
 ## 📝 Usage
 
-### Training the Model
+### Training Models
+
+#### For LSTM Decoder
 ```python
 # Configure hyperparameters
 config = {
     'arch': 'resnet18',
+    'decoder': 'lstm',
     'feature_dim': 512,
-    'embed_dim': 256,
+    'embed_dim': 384,
     'hidden_dim': 512,
     'num_layers': 2,
     'learning_rate': 1e-4,
     'batch_size': 32,
-    'epochs': 50
+    'epochs': 50,
+    'lstm_injection_mode': 'init_hidden'
 }
+```
 
-# Train the model
-python train.py --config config.json
+#### For Transformer Decoder
+```python
+# Configure hyperparameters
+config = {
+    'arch': 'resnet18',
+    'decoder': 'transformer',
+    'feature_dim': 512,
+    'embed_dim': 384,
+    'num_layers': 2,
+    'nhead': 8,
+    'learning_rate': 1e-4,
+    'batch_size': 32,
+    'epochs': 50,
+    'transformer_memory_tokens': 1
+}
 ```
 
 ### Generating Captions
 ```python
-# Load trained model
-model = load_model('best_model.pth')
+# Load trained model (LSTM example)
+model = load_model('models/resnet18_lstm/best_model.pth')
+
+# Load trained model (Transformer example)  
+model = load_model('models/resnet18_transformer/best_model.pth')
 
 # Generate caption for an image
 caption = generate_caption(model, image_path, vocab, max_length=20)
@@ -157,9 +199,9 @@ Image_Captioning/
 ### Notebook Sections
 1. **Data Analysis**: RSICD dataset exploration and statistics
 2. **Preprocessing**: Image and text preprocessing pipelines
-3. **Model Implementation**: CNN-LSTM architecture definition
-4. **Training**: Model training with validation monitoring
-5. **Evaluation**: BLEU score computation and analysis
+3. **Model Implementation**: CNN encoder with LSTM/Transformer decoder options
+4. **Training**: Model training with validation monitoring for both architectures
+5. **Evaluation**: BLEU score computation and analysis for both models
 6. **Explainability**: Grad-CAM and attention visualization
 7. **Error Analysis**: Failure case studies and improvements
 
@@ -172,7 +214,10 @@ Image_Captioning/
 - ✅ Train/validation/test splits with no overlap
 
 ### Model Capabilities
-- ✅ CNN-LSTM architecture with attention
+- ✅ CNN-LSTM architecture with multiple injection modes
+- ✅ CNN-Transformer architecture with self-attention
+- ✅ Multi-head attention mechanism (Transformer)
+- ✅ Positional encoding for sequence modeling
 - ✅ Multiple feature injection modes
 - ✅ Beam search for caption generation
 - ✅ Configurable hyperparameters
@@ -195,31 +240,35 @@ Image_Captioning/
 
 1. **Remote Sensing Focus**: Specialized implementation for satellite/aerial imagery
 2. **Comprehensive Analysis**: End-to-end pipeline with detailed dataset analysis
-3. **Explainability**: Multiple interpretation methods (Grad-CAM, attention, occlusion)
-4. **Error Analysis**: Systematic study of failure cases and improvement strategies
-5. **Reproducible Research**: Complete code with detailed documentation
+3. **Multiple Architectures**: Comparison between LSTM and Transformer decoders
+4. **Explainability**: Multiple interpretation methods (Grad-CAM, attention, occlusion)
+5. **Error Analysis**: Systematic study of failure cases and improvement strategies
+6. **Reproducible Research**: Complete code with detailed documentation
 
 ## 📊 Results Summary
 
-| Metric | Score |
-|--------|-------|
-| BLEU-1 | 0.5847 |
-| BLEU-2 | 0.4103 |
-| BLEU-3 | 0.2968 |
-| BLEU-4 | 0.2238 |
-| Vocab Size | 3,545 |
-| Avg Caption Length | 10.7 words |
-| Training Images | 8,736 |
-| Model Parameters | ~2.1M |
+### Model Comparison
+
+| Architecture | BLEU-1 | BLEU-2 | BLEU-3 | BLEU-4 | METEOR | Parameters |
+|--------------|--------|--------|--------|--------|--------|------------|
+| CNN + LSTM (Cached) | 0.5847 | 0.4103 | 0.2968 | 0.2238 | - | ~2.1M |
+| CNN + Transformer | - | - | - | 0.2074 | 0.3577 | ~2.1M |
+
+### Dataset Statistics
+- **Vocab Size**: 3,545
+- **Avg Caption Length**: 10.7 words  
+- **Training Images**: 8,736
+- **Validation Coverage**: 85.6%
 
 ## 🚧 Future Improvements
 
-- [ ] **Transformer Architecture**: Replace LSTM with self-attention mechanisms
+- [ ] **Advanced Transformer Variants**: Implement Vision Transformer (ViT) encoder
 - [ ] **Multi-Scale Features**: Incorporate features from multiple CNN layers
 - [ ] **Data Augmentation**: Advanced augmentation techniques for remote sensing
 - [ ] **Vocabulary Expansion**: Include more descriptive terms and technical vocabulary
 - [ ] **Cross-Domain Transfer**: Adapt model for different types of remote sensing imagery
 - [ ] **Real-time Inference**: Optimize model for deployment and real-time applications
+- [ ] **Attention Visualization**: Enhanced attention mechanism visualization tools
 
 ## 📚 References
 
@@ -238,4 +287,4 @@ This is an academic project. For suggestions or discussions about the implementa
 
 ---
 
-*This implementation serves as a comprehensive example of image captioning for remote sensing imagery, demonstrating both technical implementation and thorough analysis of the approach.*
+*This implementation serves as a comprehensive example of image captioning for remote sensing imagery, demonstrating both traditional LSTM-based and modern Transformer-based approaches with thorough analysis and comparison of different architectures.*
